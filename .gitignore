@@ -1,6 +1,7 @@
 _archive/
 .ipynb_checkpoints/
 tutorial*.py
+*eraseme*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

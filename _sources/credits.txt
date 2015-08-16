@@ -1,0 +1,17 @@
+USA states hex and square:
+Let’s Tesselate: Hexagons For Tile Grid Maps
+By Danny DeBelius | May 11, 2015
+http://blog.apps.npr.org/2015/05/11/hex-tile-maps.html
+
+USA states althex:
+Patrick Horner
+https://twitter.com/VizDesign/status/597516870028304385
+
+USA states altsquare:
+The Economist
+http://40.media.tumblr.com/3457a64312eaae0fd023e481a113b408/tumblr_nbsokcFtEd1qd65vgo1_400.png
+
+USA states fourhex
+Jason Emory Parker
+https://twitter.com/jaspar/status/598165879499677697
+

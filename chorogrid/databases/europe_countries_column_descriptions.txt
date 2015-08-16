@@ -1,0 +1,12 @@
+abbrev                       Two-letter ISO country code
+full_name                    Full name
+
+map_path                     SVG path for geographic map
+map_fill_default             Number, 1-4, so that no countries sharing a border will have same fill
+map_label_x                  X-coordinate for map label, e.g. country name
+map_label_y                  Y-coordinate for map label
+map_label_text_anchor        Text anchor (start, middle, end) for label
+map_label_line_path          Path for line connecting country and label, if applicable
+
+hex_x                        Horizontal position of hex grid
+hex_y                        Vertical position of hex grid

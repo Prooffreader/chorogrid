@@ -1,0 +1,30 @@
+abbrev                       Postal abbreviation for 50 states and D.C.
+full_name                    Full name
+long_abbrev                  Abbreviation, based on but not identical to recommendations of Associated Press
+FIPS                         Federal Information Processing Standards
+pop                          Population in 2013
+sqmi                         Area in square miles
+
+map_path                     SVG path for geographic map
+map_fill_default             Number, 1-4, so that no states sharing a border will have same fill
+map_label_x                  X-coordinate for map label, e.g. state name
+map_label_y                  Y-coordinate for map label
+map_label_text_anchor        Text anchor (start, middle, end) for label
+map_label_line_path          Path for line connecting state and label, if applicable
+
+altmap_path                  Alternate SVG path, without labels
+
+square_x                     Horizontal position of square grid
+square_y                     Vertical position of square grid
+
+altsquare_x                  Alternate horizontal position of square grid
+altsquare_y                  Alternate vertical position of square grid
+
+hex_x                        Horizontal position of hex grid
+hex_y                        Vertical position of hex grid
+
+fourhex_x                    Horizontal position of topmost, then leftmost, hex in four-hex multihex layout
+fourhex_y                    Vertical position of topmost, then leftmost, hex in four-hex multihex layout
+fourhex_contour              Contour of four-hex layout: a=up&right, b=down&right, c=down, d=down&left, e=up&left, f=up
+fourhex_label_offset_x       Horizontal offset of label, in terms of hex width
+fourhex_label_offset_y       Vertical offset of label, in terms of hex width

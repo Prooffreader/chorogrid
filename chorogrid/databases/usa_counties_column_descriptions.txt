@@ -1,0 +1,7 @@
+﻿name          County name, e.g. "Santa Barbara"
+state         2-letter state abbreviation, e.g. CA
+map_path      SVG path for county outline
+fips          Federal Information Processing Standards code for county in string format, e.g. "06083"
+fips_integer  Federal Information Processing Standards code for county in integer format, e.g. 6083
+middle_x      horizontal coordinate of center of county; not used for anything in this script, but provided just in case it's useful
+middle_y      vertical coordinate of center of county; not used for anything in this script, but provided just in case it's useful

@@ -145,10 +145,10 @@ class Chorogrid(object):
         missing = comparison_set.difference(set(ids))
         if len(invalid) > 0:
             print('WARNING: The following are not recognized'
-                   ' ids: {}'.format(invalid), file=sys.stderr)
+                  ' ids: {}'.format(invalid), file=sys.stderr)
         if len(missing) > 0:
             print('WARNING: The following ids in the csv are not '
-                   'included: {}'.format(missing), file=sys.stderr)
+                  'included: {}'.format(missing), file=sys.stderr)
         self.colors = list(colors)
         self.ids = list(ids)
         self.svglist = []

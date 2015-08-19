@@ -1,6 +1,12 @@
 #!/usr/bin/python
 # Filename: Chorogrid.py
 
+import xml.etree.ElementTree as ET
+import pandas as pd
+import sys
+from math import sqrt
+from IPython.display import SVG, display
+
 class Chorogrid(object):
     """ An object which makes choropleth grids, instantiated with:
             csv_path: the path to a csv data file with the following columns:
@@ -31,11 +37,6 @@ class Chorogrid(object):
            show(): display the result in IPython notebook
     """
     def __init__(self, csv_path, ids, colors, id_column='abbrev'):
-        import xml.etree.ElementTree as ET
-        import pandas as pd
-        import sys
-        from math import sqrt
-        from IPython.display import SVG, display
         self.df = pd.read_csv(csv_path)
         comparison_set = set(self.df[id_column])
         invalid = set(ids).difference(comparison_set)
@@ -79,11 +80,9 @@ class Chorogrid(object):
         return ''.join(to_return)
     def _make_svg_top(self, width, height):
         """Writes first part of svg"""
-        import xml.etree.ElementTree as ET
         self.svg = ET.Element('svg', xmlns="http://www.w3.org/2000/svg", 
             version="1.1", height=str(height), width=str(width))
     def _draw_title(self, x, y):
-        import xml.etree.ElementTree as ET
         if len(self.title) > 0:
             font_style = self._dict2style(self.title_font_dict)
             _ = ET.SubElement(self.svg, "text", id="title", x=str(x), 
@@ -102,7 +101,6 @@ class Chorogrid(object):
             font_colors = ['#000000'] * len(self.ids)
         return font_colors
     def _calc_hexagon(self, x, y, w):
-        from math import sqrt
         h = w/sqrt(3)
         return "{},{} {},{} {},{} {},{} {},{} {},{}".format(x, y,
                                                             x+w/2, y-h/2,
@@ -111,7 +109,6 @@ class Chorogrid(object):
                                                             x+w/2, y+1.5*h,
                                                             x, y+h)
     def _increment_multihex(self, x, y, w, direction):                                        
-        from math import sqrt
         h = w/sqrt(3)
         if direction == 'a':
             return x+w/2, y-h/2
@@ -252,7 +249,6 @@ class Chorogrid(object):
     
     # another function-from-within, I'm placing it here to be right below the set_legend method
     def _apply_legend(self):
-        import xml.etree.ElementTree as ET
         d = self.legend_params # convenient one-letter-long dict name    
         for i, color in enumerate(d['colors']):
             style_text = ("fill:{0};stroke-width:{1}px;stroke:{2};fill-rule:"
@@ -295,7 +291,6 @@ class Chorogrid(object):
     def done(self, show=True, save_filename=None):
         """if show == True, displays the svg in IPython notebook. If save_filename
            is specified, saves svg file"""
-        import xml.etree.ElementTree as ET
         svgstring = ET.tostring(self.svg).decode('utf-8')
         svgstring = svgstring.replace('</svg>', ''.join(self.additional_svg) + '</svg>')
         svgstring = svgstring.replace(">", ">\n")
@@ -305,8 +300,6 @@ class Chorogrid(object):
             with open(save_filename, 'w+', encoding='utf-8') as f:
                 f.write(svgstring)
         if show:
-            from IPython.display import display, SVG
-            import xml.etree.ElementTree as ET
             display(SVG(svgstring))
 
                 
@@ -347,7 +340,6 @@ class Chorogrid(object):
             corresponding to ids, a dict of hex colors to font color, or a 
             string of a single color.             
         """
-        import xml.etree.ElementTree as ET
         font_dict = {'font-style': 'normal', 'font-weight': 'normal', 
                       'font-size': '12px', 'line-height': '125%', 
                       'text-anchor': 'middle', 'font-family': 'sans-serif', 
@@ -460,7 +452,6 @@ class Chorogrid(object):
                         'missing_color': '#a0a0a0',
                         'legend_offset': [0, 0]}           
         """
-        import xml.etree.ElementTree as ET
         spacing_dict = {'map_width': 959, 
                         'map_height': 593,
                         'margin_left': 10,  
@@ -550,8 +541,6 @@ class Chorogrid(object):
             corresponding to ids, a dict of hex colors to font color, or a 
             string of a single color.            
         """
-        import xml.etree.ElementTree as ET
-        from math import sqrt
         font_dict = {'font-style': 'normal', 
                      'font-weight': 'normal', 
                      'font-size': '12px', 
@@ -696,8 +685,6 @@ class Chorogrid(object):
             corresponding to ids, a dict of hex colors to font color, or a 
             string of a single color.           
         """
-        import xml.etree.ElementTree as ET
-        from math import sqrt
         font_dict = {'font-style': 'normal', 
                      'font-weight': 'normal', 
                      'font-size': '12px', 

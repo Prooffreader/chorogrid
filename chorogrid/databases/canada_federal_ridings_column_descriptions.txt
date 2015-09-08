@@ -1,0 +1,8 @@
+district_code               Federal electoral district code
+province                    Two-letter province postal abbreviation
+federal_electoral_district  Name of federal riding
+population                  Population in riding
+electors                    Number of eligible voters in riding
+area_km2                    Area of riding in square kilometers
+square_x                    Horizontal position of square
+square_y                    Vertical position of square

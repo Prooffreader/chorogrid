@@ -1,0 +1,14 @@
+province,multisquare_x,multisquare_y,multisquare_contour,multisquare_label_offset_x,multisquare_label_offset_y
+NL,44,2,abcdAAabadababccccdd,3.5,1.1
+PE,47,5,aaaabccccd,1.5,0.1
+NS,47,7,aaaabcbbbcccdaddcd,1.5,1
+NB,44,6,aababbcbccdddd,0.5,1
+QC,42,2,aababcbaabccccbcbbccbccbcccccdccccccdaaaadadadadadaaaaaaadad,-5.5,4
+ON,16,8,aaaaabababaadaaaaaaabbcbcccbcbcccbcbcbcccbcbcbaaabbccdccccbccdcdadaddaadadddddadaaaadccdcccd,6,5
+MB,14,2,aabbbbbbbccddddddd,0.5,3
+SK,12,2,aabbbbbbbccddddddd,0.5,3
+AB,7,0,aaaaabbbbbbbbbcdcdcdcddcdddd,2,2
+BC,0,6,abbababcccddddAAadddaaaababbabababcccccccdcdcd,5,-1.5
+YT,5,0,abcd,0,0
+NT,13,0,abcd,0,0
+NU,15,0,abcd,0,0

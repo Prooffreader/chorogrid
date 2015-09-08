@@ -3,6 +3,7 @@
 
 import xml.etree.ElementTree as ET
 import pandas as pd
+import re
 import sys
 from math import sqrt
 from IPython.display import SVG, display
@@ -25,16 +26,18 @@ class Chorogrid(object):
                        used when the class was instantiated
            set_title: set a title for the map
            set_legend: set a legend
-           add_svg(): add some custom svg code. This must be called
+           add_svg: add some custom svg code. This must be called
                       after the draw_... method, because it needs to know
                       the margins.
            
-           draw_squares(): draw a square grid choropleth
-           draw_hex(): draw a hex-based choropleth
+           draw_squares: draw a square grid choropleth
+           draw_hex: draw a hex-based choropleth
            draw_multihex: draw a multiple-hex-based choropleth
+           draw_multisquare: draw a multiple-square-based choropleth
            draw_map: draw a regular, geographic choropleth
            
-           show(): display the result in IPython notebook
+           done: save and/or display the result in IPython notebook
+           done_with_overlay: overlay two Chorogrid objects
     """
     def __init__(self, csv_path, ids, colors, id_column='abbrev'):
         self.df = pd.read_csv(csv_path)
@@ -111,23 +114,62 @@ class Chorogrid(object):
     def _increment_multihex(self, x, y, w, direction):                                        
         h = w/sqrt(3)
         if direction == 'a':
-            return x+w/2, y-h/2
+            return 'L', x+w/2, y-h/2
         elif direction == 'b':
-            return x+w/2, y+h/2
+            return 'L', x+w/2, y+h/2
         elif direction == 'c':
-            return x, y+h
+            return 'L', x, y+h
         elif direction == 'd':
-            return x-w/2, y+h/2
+            return 'L', x-w/2, y+h/2
         elif direction == 'e':
-            return x-w/2, y-h/2
+            return 'L', x-w/2, y-h/2
         elif direction == 'f':
-            return x, y-h
+            return 'L', x, y-h
+        elif direction == 'A':
+            return 'M', x+w/2, y-h/2
+        elif direction == 'B':
+            return 'M', x+w/2, y+h/2
+        elif direction == 'C':
+            return 'M', x, y+h
+        elif direction == 'D':
+            return 'M', x-w/2, y+h/2
+        elif direction == 'E':
+            return 'M', x-w/2, y-h/2
+        elif direction == 'F':
+            return 'M', x, y-h
     def _calc_multihex(self, x, y, w, contour):
         result = []
-        result.append("{}, {}".format(x, y))
+        result.append("M{}, {}".format(x, y))
         for letter in contour:
-            x, y = self._increment_multihex(x, y, w, letter)
-            result.append("{}, {}".format(x, y))
+            LM, x, y = self._increment_multihex(x, y, w, letter)
+            result.append("{}{}, {}".format(LM, x, y))
+        result.append('Z')
+        return " ".join(result)
+
+    def _increment_multisquare(self, x, y, w, direction):                                        
+        if direction == 'a':
+            return 'L', x+w, y
+        elif direction == 'b':
+            return 'L', x, y+w
+        elif direction == 'c':
+            return 'L', x-w, y
+        elif direction == 'd':
+            return 'L', x, y-w
+        elif direction == 'A':
+            return 'M', x+w, y
+        elif direction == 'B':
+            return 'M', x, y-w
+        elif direction == 'C':
+            return 'M', x-w, y
+        elif direction == 'D':
+            return 'M', x, y+w
+    def _calc_multisquare(self, x, y, w, contour):
+        result = []
+        result.append("M{}, {}".format(x, y))
+        for letter in contour:
+            LM, x, y = self._increment_multisquare(x, y, w, letter)
+            result.append("{}{} {}".format(LM, x, y))
+        result.append('Z')
         return " ".join(result)
 
     # functions to set properties that will be retained across different
@@ -279,13 +321,33 @@ class Chorogrid(object):
             _.text = d['title']
 
     def add_svg(self, text, offset=[0, 0]):
-        """Adds svg text to the final output". Can be called more than once."""
+        """Adds svg text to the final output. Can be called more than once."""
         offset[0] += self.additional_offset[0]
         offset[1] += self.additional_offset[1]
         translate_text = "translate({} {})".format(offset[0], offset[1])
         text = ("<g transform=\"{}\">".format(translate_text) +
                 text + "</g>")
         self.additional_svg.append(text)
+        
+    def done_and_overlay(self, other_chorogrid, show=True, save_filename=None):
+        """Overlays a second chorogrid object on top of the root object."""
+        svgstring = ET.tostring(self.svg).decode('utf-8')
+        svgstring = svgstring.replace('</svg>', ''.join(self.additional_svg) + '</svg>')
+        svgstring = svgstring.replace(">", ">\n")
+        svgstring = svgstring.replace("</svg>", "")
+        svgstring_overlaid = ET.tostring(other_chorogrid.svg).decode('utf-8')
+        svgstring_overlaid = svgstring_overlaid.replace('</svg>', 
+                                 ''.join(other_chorogrid.additional_svg) + '</svg>')
+        svgstring_overlaid = svgstring_overlaid.replace(">", ">\n")
+        svgstring_overlaid = re.sub('<svg.+?>', '', svgstring_overlaid)
+        svgstring += svgstring_overlaid
+        if save_filename is not None:
+            if save_filename[-4:] != '.svg':
+                save_filename += '.svg'
+            with open(save_filename, 'w+', encoding='utf-8') as f:
+                f.write(svgstring)
+        if show:
+            display(SVG(svgstring))
             
     # the .done() method           
     def done(self, show=True, save_filename=None):
@@ -301,10 +363,9 @@ class Chorogrid(object):
                 f.write(svgstring)
         if show:
             display(SVG(svgstring))
-
-                
+   
     # the methods to draw square grids, map (traditional choropleth),
-    # hex grid, four-hex grid
+    # hex grid, four-hex grid, multi-square grid
     
     def draw_squares(self, x_column='square_x', 
                      y_column='square_y', **kwargs):
@@ -638,10 +699,6 @@ class Chorogrid(object):
                           spacing_dict['margin_right']) / 2 + 
                           spacing_dict['margin_left'],
                           spacing_dict['title_y_offset'])
-        self._draw_title((total_width - spacing_dict['margin_left'] - 
-                          spacing_dict['margin_right']) / 2 + 
-                          spacing_dict['margin_left'],
-                          spacing_dict['title_y_offset'])
 
     def draw_multihex(self, x_column='fourhex_x', y_column='fourhex_y', 
                       contour_column = 'fourhex_contour', 
@@ -656,6 +713,7 @@ class Chorogrid(object):
                 d: down and to the left
                 e: up and to the left
                 f: up
+            Capital letters signify a move without drawing.
         
         Note on kwarg dicts: defaults will be used for all keys unless 
         overridden, i.e. you don't need to state all the key-value pairs.
@@ -758,9 +816,9 @@ class Chorogrid(object):
                                       spacing_dict['stroke_width']))
             this_font_style = font_style + ';fill:{}'.format(this_font_color)
             ET.SubElement(self.svg, 
-                          "polygon", 
+                          "path", 
                           id="hex{}".format(id_),
-                          points=self._calc_multihex(x, y, w, contour),
+                          d=self._calc_multihex(x, y, w, contour),
                           style=polystyle)
             _ = ET.SubElement(self.svg, 
                               "text", 
@@ -782,6 +840,136 @@ class Chorogrid(object):
                           spacing_dict['margin_right']) / 2 + 
                           spacing_dict['margin_left'],
                           spacing_dict['title_y_offset'])
+
+    def draw_multisquare(self, x_column='multisquare_x', y_column='multisquare_y', 
+                      contour_column = 'multisquare_contour', 
+                      x_label_offset_column = 'multisquare_label_offset_x',
+                      y_label_offset_column = 'multisquare_label_offset_y',
+                      **kwargs):
+        """ Creates an SVG file based on a square grid, with contours
+            described by the following pattern:
+                a: right
+                b: down
+                c: left
+                d: up
+                A: right (without drawing)
+                B: down (without drawing)
+                C: left (without drawing)
+                D: up (without drawing)
+
+        Note on kwarg dicts: defaults will be used for all keys unless 
+        overridden, i.e. you don't need to state all the key-value pairs.
+        
+        kwarg: font_dict
+            default: {'font-style': 'normal', 'font-weight': 'normal', 
+                      'font-size': '12px', 'line-height': '125%', 
+                      'text-anchor': 'middle', 'font-family': 'sans-serif', 
+                      'letter-spacing': '0px', 'word-spacing': '0px', 
+                      'fill-opacity': 1, 'stroke': 'none', 
+                      'stroke-width': '1px', 'stroke-linecap': 'butt', 
+                      'stroke-linejoin': 'miter', 'stroke-opacity': 1,
+                      'fill': '#000000'}
+                      
+        kwarg: spacing_dict
+            default: {'margin_left': 30,  'margin_top': 60,  
+                      'margin_right': 40,  'margin_bottom': 20,  
+                      'cell_width': 30,  'title_y_offset': 30,  
+                      'name_y_offset': 15,  'stroke_width': 1
+                      'stroke_color': '#ffffff',  'missing_color': '#a0a0a0',
+                      'legend_offset': [0, -10]}
+            (note that there is no gutter)
+                      
+        kwarg: font_colors
+            default = "#000000"
+            if specified, must be either listlike object of colors 
+            corresponding to ids, a dict of hex colors to font color, or a 
+            string of a single color.           
+        """
+        font_dict = {'font-style': 'normal', 
+                     'font-weight': 'normal', 
+                     'font-size': '12px', 
+                     'line-height': '125%', 
+                     'text-anchor': 'middle', 
+                     'font-family': 'sans-serif', 
+                     'letter-spacing': '0px', 
+                     'word-spacing': '0px', 
+                     'fill-opacity': 1, 
+                     'stroke': 'none', 
+                     'stroke-width': '1px',
+                     'stroke-linecap': 'butt', 
+                     'stroke-linejoin': 'miter', 
+                     'stroke-opacity': 1}
+        spacing_dict = {'margin_left': 30,  
+                        'margin_top': 60,  
+                        'margin_right': 80,  
+                        'margin_bottom': 20,  
+                        'cell_width': 30,  
+                        'title_y_offset': 30,  
+                        'name_y_offset': 15,  
+                        'roundedness': 3,  
+                        'stroke_width': 1,  
+                        'stroke_color': '#ffffff',  
+                        'missing_color': '#a0a0a0', 
+                        'missing_font_color': '#000000',
+                        'legend_offset': [0, -10]}
+        font_dict = self._update_default_dict(font_dict, 'font_dict', kwargs)
+        spacing_dict = self._update_default_dict(spacing_dict, 
+                                                 'spacing_dict', kwargs)
+        font_colors = self._determine_font_colors(kwargs)
+        font_style = self._dict2style(font_dict)
+        total_width = (spacing_dict['margin_left'] + 
+                       (self.df[x_column].max()+1) * 
+                       spacing_dict['cell_width'] + 
+                       spacing_dict['margin_right'])
+        total_height = (spacing_dict['margin_top'] + 
+                        (self.df[y_column].max()+1) *
+                        spacing_dict['cell_width'] + 
+                        spacing_dict['margin_bottom'])
+        self._make_svg_top(total_width, total_height)
+        w = spacing_dict['cell_width']
+        for i, id_ in enumerate(self.df[self.id_column]):
+            if id_ in self.ids:
+                this_color = self.colors[self.ids.index(id_)]
+                this_font_color = font_colors[self.ids.index(id_)]
+            else:
+                this_color = spacing_dict['missing_color']
+                this_font_color = spacing_dict['missing_font_color']
+            across = self.df[x_column].iloc[i]
+            down = self.df[y_column].iloc[i]
+            contour = self.df[contour_column].iloc[i]
+            label_off_x = self.df[x_label_offset_column].iloc[i]
+            label_off_y = self.df[y_label_offset_column].iloc[i]
+       
+            x = (spacing_dict['margin_left'] + across * w)
+            y = (spacing_dict['margin_top'] + 
+                 down * w)
+            polystyle = ("stroke:{0};stroke-miterlimit:4;stroke-opacity:1;"
+                         "stroke-dasharray:none;fill:{1};stroke-width:"
+                         "{2}".format(spacing_dict['stroke_color'],
+                                      this_color,
+                                      spacing_dict['stroke_width']))
+            this_font_style = font_style + ';fill:{}'.format(this_font_color)
+            ET.SubElement(self.svg, 
+                          "path", 
+                          id="square{}".format(id_),
+                          d=self._calc_multisquare(x, y, w, contour),
+                          style=polystyle)
+            _ = ET.SubElement(self.svg, 
+                              "text", 
+                              id="text{}".format(id_),
+                              x=str(x + w/2 + w * label_off_x),
+                              y=str(y + spacing_dict['name_y_offset'] +
+                                    w * label_off_y), 
+                              style=this_font_style)
+            _.text = str(id_)
+        if self.legend_params is not None and len(self.legend_params) > 0:
+            self.legendsvg = ET.SubElement(self.svg, "g", transform=
+                    "translate({} {})".format(total_width - 
+                    spacing_dict['margin_right'] + 
+                    spacing_dict['legend_offset'][0],
+                    total_height - self.legend_height +
+                    spacing_dict['legend_offset'][1]))
+            self._apply_legend()
         self._draw_title((total_width - spacing_dict['margin_left'] - 
                           spacing_dict['margin_right']) / 2 + 
                           spacing_dict['margin_left'],

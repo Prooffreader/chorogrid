@@ -1,0 +1,6 @@
+province                    Two-letter province postal abbreviation
+multisquare_x               Horizontal position of upper-left square
+multisquare_y               Vertical position of upper-left square
+multisquare_contour         Contour of squares: a=right, b=down, c=left, d=up, A=right without drawing
+multisquare_label_offset_x  Offset for province label
+multisquare_label_offset_y  Offset for province label

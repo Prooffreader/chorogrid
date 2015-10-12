@@ -103,14 +103,25 @@ class Chorogrid(object):
         else:
             font_colors = ['#000000'] * len(self.ids)
         return font_colors
-    def _calc_hexagon(self, x, y, w):
-        h = w/sqrt(3)
-        return "{},{} {},{} {},{} {},{} {},{} {},{}".format(x, y,
-                                                            x+w/2, y-h/2,
-                                                            x+w, y,
-                                                            x+w, y+h,
-                                                            x+w/2, y+1.5*h,
-                                                            x, y+h)
+    def _calc_hexagon(self, x, y, w, true_rows):
+        if true_rows:
+            h = w/sqrt(3)
+            return "{},{} {},{} {},{} {},{} {},{} {},{}".format(x, y,
+                                                                x+w/2, y-h/2,
+                                                                x+w, y,
+                                                                x+w, y+h,
+                                                                x+w/2, y+1.5*h,
+                                                                x, y+h)
+        else:
+            ww = w/2
+            hh = w * sqrt(3) / 2
+            return "{},{} {},{} {},{} {},{} {},{} {},{}".format(x, y,
+                                                                x+ww, y,
+                                                                x+ww*3/2, y-hh/2,
+                                                                x+ww, y-hh,
+                                                                x, y-hh,
+                                                                x-ww/2, y-hh/2)
+            
     def _increment_multihex(self, x, y, w, direction):                                        
         h = w/sqrt(3)
         if direction == 'a':
@@ -569,11 +580,27 @@ class Chorogrid(object):
                           spacing_dict['margin_left'],
                           spacing_dict['title_y_offset'])
 
-    def draw_hex(self, x_column='hex_x', y_column='hex_y', **kwargs):
+    def draw_hex(self, x_column='hex_x', y_column='hex_y', true_rows=True, **kwargs):
         """ Creates an SVG file based on a hexagonal grid, with coordinates 
         from the specified columns in csv_path (specified when Chorogrid class
         initialized).
         
+        Note that hexagonal grids can have two possible layouts:
+        1. 'true rows' (the default), in which:
+          * hexagons lie in straight rows joined by vertical sides to east and west
+          * hexagon points lie to north and south
+          * the home point (x=0, y=0 from upper left/northwest) has (1,0) to its immediate east
+          * the home point (0,0) shares its southeast side with (0,1)'s northwest side
+          * then (0,1) shares its southwest side with (0,2)'s northeast side
+          * thus odd rows are offset to the east of even rows
+        2. 'true columns', in which:
+          * hexagons lie in straight columns joined by horizontal sides to north and south
+          * hexagon points lie to east and west
+          * the home point (x=0, y=0 from upper left/northwest) has (0,1) to its immediate south
+          * the home point (0,0) shares its southeast side with (1,0)'s northwest side.
+          * then (1,0) shares its northeast side with (2,0)'s southwest side.
+          * thus odd columns are offset to the south of even columns
+
         Note on kwarg dicts: defaults will be used for all keys unless 
         overridden, i.e. you don't need to state all the key-value pairs.
         
@@ -636,18 +663,32 @@ class Chorogrid(object):
                                                  'spacing_dict', kwargs)
         font_colors = self._determine_font_colors(kwargs)
         font_style = self._dict2style(font_dict)
-        total_width = (spacing_dict['margin_left'] + 
-                       (self.df[x_column].max()+1.5) * 
-                       spacing_dict['cell_width'] + 
-                       (self.df[x_column].max()-1) *
-                       spacing_dict['gutter'] + 
-                       spacing_dict['margin_right'])
-        total_height = (spacing_dict['margin_top'] + 
-                        (self.df[y_column].max() + 1.711) *
-                        spacing_dict['cell_width'] + 
-                        (self.df[y_column].max()-1) *
-                        spacing_dict['gutter'] + 
-                        spacing_dict['margin_bottom'])
+        if true_rows:
+            total_width = (spacing_dict['margin_left'] + 
+                           (self.df[x_column].max()+1.5) * 
+                           spacing_dict['cell_width'] + 
+                           (self.df[x_column].max()-1) *
+                           spacing_dict['gutter'] + 
+                           spacing_dict['margin_right'])
+            total_height = (spacing_dict['margin_top'] + 
+                            (self.df[y_column].max()*0.866 + 0.289) *
+                            spacing_dict['cell_width'] + 
+                            (self.df[y_column].max()-1) *
+                            spacing_dict['gutter'] + 
+                            spacing_dict['margin_bottom'])
+        else:
+            total_width = (spacing_dict['margin_left'] + 
+                           (self.df[x_column].max()*0.75 + 0.25) * 
+                           spacing_dict['cell_width'] + 
+                           (self.df[x_column].max()-1) *
+                           spacing_dict['gutter'] + 
+                           spacing_dict['margin_right'])
+            total_height = (spacing_dict['margin_top'] + 
+                            (self.df[y_column].max() + 1.5) *
+                            spacing_dict['cell_width'] + 
+                            (self.df[y_column].max()-1) *
+                            spacing_dict['gutter'] + 
+                            spacing_dict['margin_bottom'])
         self._make_svg_top(total_width, total_height)
         w = spacing_dict['cell_width']
         for i, id_ in enumerate(self.df[self.id_column]):
@@ -659,16 +700,25 @@ class Chorogrid(object):
                 this_font_color = spacing_dict['missing_font_color']
             across = self.df[x_column].iloc[i]
             down = self.df[y_column].iloc[i]
-            # offset odd rows to the right
-            if down % 2 == 1:
-                x_offset = w/2
+            # offset odd rows to the right or down
+            x_offset = 0
+            y_offset = 0
+            if true_rows:
+                if down % 2 == 1:
+                    x_offset = w/2
+                x = (spacing_dict['margin_left'] + 
+                     x_offset + across * (w + spacing_dict['gutter']))
+                y = (spacing_dict['margin_top'] + 
+                    down * (1.5 * w / sqrt(3) + spacing_dict['gutter']))
             else:
-                x_offset = 0
+                x_offset = 0.25 * w # because northwest corner is to the east of westmost point
+                if across % 2 == 1:
+                    y_offset = w*0.866/2
+                x = (spacing_dict['margin_left'] + 
+                     x_offset + across * 0.75 * (w + spacing_dict['gutter']))
+                y = (spacing_dict['margin_top'] + 
+                    y_offset + down * (sqrt(3) / 2 * w + spacing_dict['gutter']))
        
-            x = (spacing_dict['margin_left'] + 
-                 x_offset + across * (w + spacing_dict['gutter']))
-            y = (spacing_dict['margin_top'] + 
-                 down * (1.5 * w / sqrt(3) + spacing_dict['gutter']))
             polystyle = ("stroke:{0};stroke-miterlimit:4;stroke-opacity:1;"
                          "stroke-dasharray:none;fill:{1};stroke-width:"
                          "{2}".format(spacing_dict['stroke_color'],
@@ -678,7 +728,7 @@ class Chorogrid(object):
             ET.SubElement(self.svg, 
                           "polygon", 
                           id="hex{}".format(id_),
-                          points=self._calc_hexagon(x, y, w),
+                          points=self._calc_hexagon(x, y, w, true_rows),
                           style=polystyle)
             _ = ET.SubElement(self.svg, 
                               "text", 

@@ -1,4 +1,4 @@
-district_code,province,federal_electoral_district,population,electors,area_km2,square_x,square_y,truecolhex_x,truecolhex_y
+﻿district_code,province,federal_electoral_district,population,electors,area_km2,square_x,square_y,truecolhex_x,truecolhex_y
 48001,AB,Banff—Airdrie,105442,87666,12282,8,3,11,6
 48007,AB,Calgary Heritage,108320,79349,70,9,6,11,8
 48012,AB,Calgary Signal Hill,109647,83227,66,8,5,11,7
@@ -230,7 +230,7 @@ district_code,province,federal_electoral_district,population,electors,area_km2,s
 35097,ON,Scarborough—Rouge Park,102646,71291,57,24,14,35,14
 35108,ON,Toronto Centre,93971,66351,6,21,16,35,17
 35109,ON,Toronto—Danforth,104017,76567,26,22,16,35,19
-35006,ON,Bay of Qunite,109488,83427,2000,29,12,36,16
+35006,ON,Bay of Quinte,109488,83427,2000,29,12,36,16
 35007,ON,Beaches—East York,107084,75169,17,22,15,36,17
 35066,ON,Niagara Centre,105860,81364,334,18,22,36,19
 35074,ON,Oshawa,125771,94928,65,27,13,36,14
